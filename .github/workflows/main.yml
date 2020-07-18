@@ -1,0 +1,29 @@
+name: Update celebrations
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: ${{ runner.os }}-pip-
+    - name: Install Python dependencies
+      run: python -m pip install -r requirements.txt
+    - name: Update celebrations
+      env:
+        BUCKET: ${{secrets.BUCKET}}
+        CALENDAR_ID: ${{secrets.CALENDAR_ID}}
+        PROJECT: ${{secrets.PROJECT}}
+        SERVICE_ACCOUNT_INFO: ${{secrets.SERVICE_ACCOUNT_INFO}}
+      run: python main.py
