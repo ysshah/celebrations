@@ -10,8 +10,6 @@ from google.cloud import storage
 TOKEN_FILE = '/tmp/token.pickle'
 credentials = service_account.Credentials.from_service_account_info(
     json.loads(b64decode(environ['SERVICE_ACCOUNT_INFO'])))
-BLOB = storage.Client(project=environ['PROJECT'],
-                      credentials=credentials).get_bucket(environ['BUCKET']).blob('token.pickle')
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = [
@@ -19,8 +17,12 @@ SCOPES = [
     'https://www.googleapis.com/auth/contacts.readonly',
 ]
 
+def _blob():
+  return storage.Client(project=environ['PROJECT'],
+                        credentials=credentials).bucket(environ['BUCKET']).blob('token.pickle')
+
 def _get_creds():
-  BLOB.download_to_filename(TOKEN_FILE)
+  _blob().download_to_filename(TOKEN_FILE)
   with open(TOKEN_FILE, 'rb') as token:
     return pickle.load(token)
 
@@ -28,7 +30,7 @@ def _save_creds(creds):
   with open(TOKEN_FILE, 'wb') as token:
     pickle.dump(creds, token)
   print(f'Uploading {TOKEN_FILE}')
-  BLOB.upload_from_filename(TOKEN_FILE)
+  _blob().upload_from_filename(TOKEN_FILE)
 
 def get_credentials():
   creds = _get_creds()
